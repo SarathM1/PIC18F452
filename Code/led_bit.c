@@ -1,11 +1,12 @@
 #include<p18f452.h>
 #pragma config WDT = OFF
-
-void delay(char n)
+#define LED PORTBbits.RB0
+void delay(int n)
 {
 	int i;
-	for(i=0;i<=5000;i++)
-		for(;n>=0;n--);
+	for(;n>=0;n--)
+		for(i=0;i<=5000;i++);
+
 }
 
 void main()
@@ -13,9 +14,9 @@ void main()
 	TRISBbits.RB0 = 0;
 	while(1)
 	{
-		PORTBbits.RB0 = 0;
-		delay(2);
-		PORTBbits.RB0 = 1;
-		delay(2);
+		LED = 0;
+		delay(10);
+		LED = 1;
+		delay(10);
 	}
 }
