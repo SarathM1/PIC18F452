@@ -52,3 +52,4 @@ Temporary Items
 *.cof
 *.map
 *.hex
+*.err
