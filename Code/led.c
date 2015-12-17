@@ -14,12 +14,12 @@ void main()
 	TRISB = 0;
 	for(i=0;i<=0xff;i++)
 	{
-		LATB = i;
+		PORTB = i;
 		delay(0);
 	}
 	for(i=0xff;i>=0;i--)
 	{
-		LATB = i;
+		PORTB = i;
 		delay(0);
 	}
 }
