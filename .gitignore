@@ -48,3 +48,7 @@ Temporary Items
 *.mcw
 *.mcs
 *.mcp
+*.o
+*.cof
+*.map
+*.hex
