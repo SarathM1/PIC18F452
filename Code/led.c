@@ -1,11 +1,11 @@
 #include<p18f452.h>
 #pragma config WDT = OFF
 
-void delay(char n)
+void delay(int n)
 {
-	int i, j;
-	for(i=0;i<5000;i++)
-	for(j=0;j<0;j++);
+	int i;
+	for(;n>=0;n--)
+		for(i=0;i<=5000;i++);
 }
 
 void main()
