@@ -27,13 +27,23 @@ void high_isr (void)
 		INTCONbits.TMR0IF = 0;                 
 		TMR0H = 0xF6;        //Timer Reload to count 1ms
 		TMR0L = 0x3C;                    
-		cntr++;
-		if(cntr==1000)
-		{
-			check = 1;
-			cntr = 0;
-		}
+		check = 1;
     }
+}
+
+void delay_ms(int del)
+{
+	check = 0;			// 'check' is set every ms in isr when timer starts
+	T0CON = 0x80;       //Prescaler 1:2, Timer Started!!
+	while(del)
+	{
+		if(check)
+		{
+			del--;
+			check = 0;
+		}
+	}
+	T0CON = 0x00;       //Prescaler 1:2, Timer Stopped!!
 }
 
 void timer_init()
@@ -41,24 +51,22 @@ void timer_init()
 	/*****************Setting Interrupt ********************/
 	INTCON = 0x20;                
 	/*****************Setting Timer ************************/
-	T0CON = 0x80;                 //set up timer0 - prescaler 1:2
+	T0CON = 0x00;                 //prescaler 1:2, Timer Stopped
 	TMR0H = 0xF6;                 //Timer Reload to count 1ms
 	TMR0L = 0x3C;                    
 	INTCONbits.GIE = 1;          //enable interrupts
 
 }
 
-void main(void){
-
+void main(void)
+{
 	TRISDbits.RD0 = 0;
 	timer_init();
 	/*****************Main Program **************************/
-	while(1){
-		if (check == 1)
-		{
-			LED = ~LED;			// Turn On LED BackLight
-			check = 0;
-		}
+	while(1)
+	{
+		LED = ~LED;
+		delay_ms(1000);
 	}
 }
 
