@@ -1,50 +1,77 @@
 #include<p18f452.h>
+
 #pragma config WDT = OFF
 
-#define DEL 5
+#define DEL 200
 #define LED PORTBbits.RB7
 
 void pattern1();
 void pattern2();
 void pattern3();
 void inter_init();
+void chk_isr();
 
 int flag = 0;
 int sel=0;
+unsigned char check = 0;
+int cntr = 0;
 
-void inter_init()
-{
-	INTCONbits.INT0IF = 0;
-	INTCONbits.INT0IE = 1;
-	INTCONbits.GIE = 1;
-}
-
-#pragma interrupt int0_isr
-void int0_isr()
-{
-	if(INTCONbits.INT0IF==1)
-	{
-		flag = 1;
-		LED = ~LED;
-		INTCONbits.INT0IF = 0;
-	}
-
-}
-
+/*****************High priority interrupt vector **************************/
 #pragma code HiPrio_int = 0x08	// Changes the currect code section to address 0x08
 void HiPrio_int()
 {
 	_asm
-		GOTO int0_isr
+		GOTO chk_isr
 	_endasm
 }
 #pragma code					// #pragma code with no name changes code section to default address
 
-void delay(int n)
+
+#pragma interrupt chk_isr
+void chk_isr()
 {
-	int i;
-	for(;n>=0;n--)
-		for(i=0;i<=5000;i++);	
+	if(INTCONbits.INT0IF==1)
+	{
+		flag = 1;
+		INTCONbits.INT0IF = 0;
+	}
+	
+	if (INTCONbits.TMR0IF)
+	{  
+		INTCONbits.TMR0IF = 0;                 
+		TMR0H = 0xF6;        //Timer Reload to count 1ms
+		TMR0L = 0x3C;                    
+		check = 1;
+    }
+
+}
+
+void inter_init()
+{
+	INTCONbits.INT0IF = 0;
+	INTCONbits.TMR0IE = 1;
+	INTCONbits.INT0IE = 1;
+	INTCONbits.GIE = 1;
+
+	T0CON = 0x00;                 //prescaler 1:2, Timer Stopped
+	TMR0H = 0xF6;                 //Timer Reload to count 1ms
+	TMR0L = 0x3C;                    
+}
+
+
+void delay_ms(int del)
+{
+	check = 0;			// 'check' is set every ms in isr when timer starts
+	T0CON = 0x80;       //Prescaler 1:2, Timer Started!!
+	while(del)
+	{
+		if(check)
+		{
+			del--;
+			check = 0;
+		}
+	}
+	T0CON = 0x00;       //Prescaler 1:2, Timer Stopped!!
 }
 
 void pattern1()
@@ -61,7 +88,7 @@ void pattern1()
 			break;
 		}	
 		PORTD = i;
-		delay(DEL);
+		delay_ms(DEL);
 	}
 }
 
@@ -77,7 +104,7 @@ void pattern2()
 		}
 
 		PORTD = 1<<i;
-		delay(DEL);
+		delay_ms(DEL);
 	}
 	for(i=7;i>=0;i--)
 	{
@@ -90,7 +117,7 @@ void pattern2()
 		}
 
 		PORTD = 1<<i;
-		delay(DEL);
+		delay_ms(DEL);
 	}	
 }
 
@@ -103,9 +130,9 @@ void pattern3()
 		flag = 0;
 	}
 	PORTD = 0XAA;
-	delay(DEL+5);
+	delay_ms(DEL+5);
 	PORTD = 0X55;
-	delay(DEL+5);
+	delay_ms(DEL+5);
 }
 
 void main()
