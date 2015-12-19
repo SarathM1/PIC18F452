@@ -3,6 +3,8 @@
 #pragma config WDT = OFF
 
 #define DEL 200
+#define PATTERN_TIME_MAX 5000
+
 #define LED PORTBbits.RB7
 
 void pattern1();
@@ -14,7 +16,7 @@ void chk_isr();
 int flag = 0;
 int sel=0;
 unsigned char check = 0;
-int cntr = 0;
+int t1_cntr = 0;
 
 /*****************High priority interrupt vector **************************/
 #pragma code HiPrio_int = 0x08	// Changes the currect code section to address 0x08
@@ -43,19 +45,42 @@ void chk_isr()
 		TMR0L = 0x3C;                    
 		check = 1;
     }
+	
+	if (PIR1bits.TMR1IF)
+	{  
+		PIR1bits.TMR1IF = 0;                 
+		TMR1H = 0xF6;        //Timer Reload to count 1ms
+		TMR1L = 0x3C;                    
+		t1_cntr++;
 
+		if(t1_cntr == PATTERN_TIME_MAX)
+		{	
+			t1_cntr = 0;
+			flag = 1;
+			LED = ~LED;
+		}
+    }
 }
 
 void inter_init()
 {
-	INTCONbits.INT0IF = 0;
-	INTCONbits.TMR0IE = 1;
 	INTCONbits.INT0IE = 1;
-	INTCONbits.GIE = 1;
+	INTCONbits.INT0IF = 0;
 
+	INTCONbits.TMR0IE = 1;
+	INTCONbits.TMR0IF = 0;
 	T0CON = 0x00;                 //prescaler 1:2, Timer Stopped
 	TMR0H = 0xF6;                 //Timer Reload to count 1ms
-	TMR0L = 0x3C;                    
+	TMR0L = 0x3C; 
+
+	PIE1bits.TMR1IE = 1;
+	PIR1bits.TMR1IF = 0;
+	T1CON = 0x11;                 //prescaler 1:2, Timer Started
+	TMR1H = 0xF6;                 //Timer Reload to count 1ms
+	TMR1L = 0x3C; 
+
+	INTCONbits.PEIE = 1;
+	INTCONbits.GIE = 1;                   
 }
 
 
@@ -144,7 +169,7 @@ void main()
 
 	while(1)
 	{	
-		if(sel==3)
+		if(sel>=3)
 			sel = 0;
 
 		switch(sel)
