@@ -31,13 +31,14 @@ void int0_isr()
 
 }
 
-#pragma code HiPrio_int = 0x08
+#pragma code HiPrio_int = 0x08	// Changes the currect code section to address 0x08
 void HiPrio_int()
 {
 	_asm
 		GOTO int0_isr
 	_endasm
 }
+#pragma code					// #pragma code with no name changes code section to default address
 
 void delay(int n)
 {
