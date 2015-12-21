@@ -3,7 +3,7 @@
 #pragma config WDT = OFF
 
 #define DEL 200
-#define PATTERN_TIME_MAX 5000
+#define PATTERN_TIME_MAX 10000
 
 #define LED PORTBbits.RB7
 
